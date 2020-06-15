@@ -12,6 +12,9 @@ This is a group messaging application which implements the signal protocol for s
 - Socket library in python is used to connect server and client
 
 Run server.py to setup server and client.py from multiple terminals to setup each client
+The key exchange and encryption protocols are implemented in utils.py
+
+
 Since each user runs on a different thread the number of users is limited by the number of simultaneous threads(around 40) if run on same device(for testing)
 
 Running on different devices would allow lot more clients(not tested). User addition and deletion scales quadratically with number of users. However each message has to be encrypted only once due to usage of sender keys
