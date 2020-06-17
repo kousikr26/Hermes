@@ -20,4 +20,4 @@ Since each user runs on a different thread the number of users is limited by the
 Running on different devices would allow lot more clients(not tested). User addition and deletion scales quadratically with number of users. However each message has to be encrypted only once due to usage of sender keys
 
 (This Repo is incomplete and under development)
-(some functionality like ratcheting and asynchronicity are yet to be implemented)
+(some functionality like proper asynchronicity are yet to be implemented)
