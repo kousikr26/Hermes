@@ -1,6 +1,6 @@
 
 import pickle
-from utils import User
+from utils import User,CIPHER_KEY_SIZE,KDF
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import sys
@@ -83,8 +83,8 @@ def receiveThread():
             send("!new user",client_socket)
             print("Adding user, please wait...")
             while(True):
-                # try:
-                if(1):
+                try:
+                
                     publicKeys=pickle.loads(receive(client_socket,raw=True))
                     
                     
@@ -106,8 +106,8 @@ def receiveThread():
 
                     authenticated=True
                     break
-                else:
-                # except:
+                
+                except:
                     print("Waiting for server, please wait...")
                     time.sleep(0.5)
             
@@ -117,6 +117,10 @@ def receiveThread():
             
             
         elif checkCMD('!quit',msg):
+            user.encryptSenderKeys()
+            
+            with open("./data/"+user.id,'wb+') as userfile:  
+                pickle.dump(user,userfile) 
             print("Terminating connection")
             client_socket.close()
             os._exit(1) 
@@ -135,13 +139,24 @@ def receiveThread():
                     decipher = AES.new(user.decryptedSenderKeys[fromUser], AES.MODE_EAX,nonce=nonceRec)
                 
                 decMsgRec=decipher.decrypt(msgRec)
-            
+                
                 try:
                     decipher.verify(tagRec)
                 except ValueError:
-                    print("MAC verification failed. Message may have been tampered with.")
-                        
-                print(fromUser+": "+decMsgRec.decode('utf8'))
+                    print("MAC verification failed. Message may have been tampered with or ratcheting got out of sync")
+                if(fromUser!=user.id):
+                    
+                    
+                    
+                    print(fromUser+": "+decMsgRec.decode('utf8'))
+                    user.decryptedSenderKeys[fromUser]=KDF(user.decryptedSenderKeys[fromUser],RATCHETING_STEPS)       
+                    
+                else:
+                    print(fromUser+": "+decMsgRec.decode('utf8'))
+                    user.senderKey=KDF(user.senderKey,RATCHETING_STEPS)
+
+                  
+
             else:
                 print(msg)
            
@@ -157,9 +172,11 @@ def sendThread():
         msg = input("> ")
         print ("\033[A                             \033[A")
         if(authenticated and not checkCMD(msg,"!quit")):
-            
             send(msg,client_socket,enc=True)
+            
         else:
+            
+                
             send(msg,client_socket) 
        
 
@@ -175,6 +192,7 @@ ADDR = (HOST, PORT)
 HEADER_LENGTH=10
 
 USERNAME_LENGTH=50
+RATCHETING_STEPS=5
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
 

@@ -9,8 +9,8 @@ from Crypto.Cipher import AES
 
 CIPHER_KEY_SIZE = 16 #AES-128
 
-def KDF(sharedKey):
-    derivedKey=PBKDF2(str(sharedKey),b"",dkLen=16)
+def KDF(sharedKey,count=1000):
+    derivedKey=PBKDF2(str(sharedKey),b"",dkLen=CIPHER_KEY_SIZE,count=count)
     return derivedKey
 
 class User(object):
@@ -50,27 +50,28 @@ class User(object):
         encryptedSenderKey,tag=cipher.encrypt_and_digest(self.senderKey)        
         return (nonce,encryptedSenderKey,tag)
     def encryptSenderKeys(self):
+        
         for toUser in self.publicKeys:
-            if toUser not in self.encryptedSenderKeys:
-                self.encryptedSenderKeys[toUser]=self.encryptSenderKey(toUser)
+            
+            self.encryptedSenderKeys[toUser]=self.encryptSenderKey(toUser)
 
     def decryptSenderKey(self,fromUser,data):
         nonce,encryptedSenderKey,tag = data
         sharedKey=KDF(self.secretKeys[fromUser])
         cipher = AES.new(sharedKey, AES.MODE_EAX,nonce=nonce)
         decryptedSenderKey=cipher.decrypt(encryptedSenderKey)
-       # print("decrypting key from ",fromUser,data,decryptedSenderKey)
+       
         try:
             cipher.verify(tag)
         except ValueError:
-            print("MAC verification failed. Message may have been tampered with.")
+            print("MAC verification failed. Message may have been tampered with or ratcheting got out of sync")
             return False
         self.decryptedSenderKeys[fromUser]=decryptedSenderKey
-        #print(self.decryptedSenderKeys)
+        
     def decryptSenderKeys(self,encryptedSenderKeys):
         for fromUser in encryptedSenderKeys:
-            if fromUser not in self.decryptedSenderKeys:
-                self.decryptSenderKey(fromUser,encryptedSenderKeys[fromUser])
+            
+            self.decryptSenderKey(fromUser,encryptedSenderKeys[fromUser])
     
 
 
