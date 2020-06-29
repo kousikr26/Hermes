@@ -37,6 +37,8 @@ This step is done only on intialization if users and is <img src="https://render
 - Note : These secret pairwise channels if used directly for messaging would require each user to encrypt each message `n-1` times for each other user and cause a lot of overhead, instead we use sender keys and rely on _server side fan out_ to send the message to each user.
 - Now we generate a unique sender key for each user and use the pairwise encrypted channels to communicate the key to each other user
 
+Notice how none of the above steps requires both parties to be online at the same time and hence the whole process is asynchroous
+
 Note : On addition of user we only need to establish the new user's sender key by having a DFKE with each other user. All other sender keys remain intact.
 Note : On deletion of user we need to reinitialize all keys to prevent eavesdropping by deleted user, this is an expensive operation as it is <img src="https://render.githubusercontent.com/render/math?math=O(n^{2})">
 
@@ -49,18 +51,34 @@ Now that sender keys are established we can have communication
 
 
 ### Communication
- Socket headers etc..
- 
+Socket library is used for server client communication. Various types of messages are sent such as
+1. Unencrypted server messages(utf-8 encoded)
+2. Encrypted client messages(utf-8 encoded)
+3. Raw Pickle objects
+All messages have a message header which specifies hom many bytes long the message is. The entire message is received inside a buffer by the socket library.
+The default buffer size is **4096** bytes. If longer messages need to be sent increase this size in the `BUFSIZ` variable on both server and client side.
+
+
 ### Misc 
-pickle multithreading etc
-### Demo
-Run server.py to setup server and client.py from multiple terminals to setup each client
+Since we need to allow a login feature the calculated keys and other information must be save locally for each client. This is done by pickling the client object into a file.
+The application also uses multithreading for simultaneous receiving and sending of messages.
+The client runs 2 threads a send thread and a receive thread.
+The server runs each client on a separate thread. This is a bottleneck and running more than 100 threads on a normal processor is too intensive.
 The key exchange and encryption protocols are implemented in utils.py
 
+### Demo
+Run server.py to setup server and client.py from multiple terminals to setup each client
+If needed the host and port can be changed from both the sever and client files.
+The default is
 
-Since each user runs on a different thread the number of users is limited by the number of simultaneous threads(around 40) if run on same device(for testing)
+> HOST = '127.0.0.1'
 
-Running on different devices would allow lot more clients(not tested). User addition and deletion scales quadratically with number of users. However each message has to be encrypted only once due to usage of sender keys
+> PORT = 33001
+
+For testing `Tmux` is great for managing multiple terminals
+
+
+
 
 ### Todo
 
