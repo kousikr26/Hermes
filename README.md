@@ -34,9 +34,9 @@ This step is done only on intialization if users and is <img src="https://render
 - When intialised the server searches for a large 2048 digit long random prime `p` which is shared over all users the base `g` used is fixed at `2`(Shown to have same level of security)
 
 ```python
-    def initializeKeys(self):
-        self.privateKey=(randint(1,int(self.p-1)))
-        self.publicKey=pow(self.g,self.privateKey,self.p)
+def initializeKeys(self):
+    self.privateKey=(randint(1,int(self.p-1)))
+    self.publicKey=pow(self.g,self.privateKey,self.p)
  ```
 - When a new user is created a random integer in `[1,p)` `a` is chosen as the private key and <img src="https://render.githubusercontent.com/render/math?math=g^{a} mod p"> is taken to be the public key which is sent to the server.
 - Each user calculates its **shared secret Diffie-Hellman key** with every other user <img src="https://render.githubusercontent.com/render/math?math=g^{ab}">
