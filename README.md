@@ -1,6 +1,7 @@
 # Hermes
 **H**ashed, **E**ncrypted and **R**atched **MES**saging : An asynchronous end to end encrypted messaging socket application based on the signal protocol 
 
+### Overview
 This is a group messaging application which implements the signal protocol for secure encrypted communication.
 
 - End to End encryption ensures server learns nothing about messages and only acts as a relay
@@ -46,17 +47,30 @@ This can be improved by using **Asynchronous Ratcheting Trees** (Todo) which nee
 
 <img src="https://i2.wp.com/blog.trailofbits.com/wp-content/uploads/2019/08/post_remove_tree.png?resize=690%2C466&ssl=1" width="500">
 
+Each message is encrypted with **AES-128** in **EAX mode** using a nonce and has a tag calculated using an HMAC attached with it to prevent ciphertext tampering. 
+
+This ensures both **CCA(Chosen Ciphertext Attack) and CPA(Chosen Plaintext Attack) security**.
+
+The end to end encryption ensures security against **man in the middle attacks** unless the server itself is compromised which can only be verified by two parties independently verifing their public keys.
+
+The key is also **ratcheted** after every message by running it through a **PBKDF2** this provides backward secrecy as the PBKDF2 uses **SHA-256** which is a one way function, i.e if at any point in time the sender key is compromised all messages before it are still safe. This however does not provide forward secrecy which can be ensured using double ratcheting(DFKE based) (Todo)
+
+
 Now that sender keys are established we can have communication
 
 
 
 ### Communication
 Socket library is used for server client communication. Various types of messages are sent such as
+
 1. Unencrypted server messages(utf-8 encoded)
 2. Encrypted client messages(utf-8 encoded)
 3. Raw Pickle objects
+
 All messages have a message header which specifies hom many bytes long the message is. The entire message is received inside a buffer by the socket library.
+
 The default buffer size is **4096** bytes. If longer messages need to be sent increase this size in the `BUFSIZ` variable on both server and client side.
+
 
 
 ### Misc 
@@ -77,9 +91,26 @@ The default is
 
 For testing `Tmux` is great for managing multiple terminals
 
-<ing src="https://raw.githubusercontent.com/kousikr26/Hermes/master/demo.png">
+![Terminal demo](demo.png?raw=true "Demo image")
+
+The upper horizontal terminal is the server and others are clients.
 
 
 ### Todo
+- [x] Basic framework(Server, Client, Socket connections)
+- [x] Multithreading for simultaneous message receiving and sending
+- [x] User Addition
+- [x] User login
+- [x] Pickling client info to reduce login overhead
+- [x] DHKE, Sender Keys, End to end encryption, HMAC verification
+- [x] Single Ratcheting
+- [x] Asynchronous additions/removals
+- [ ] Reducing user addition overhead
+- [ ] Message Storing for complete asynchronicity
+- [ ] Delete user option(Keys should be reinitialized)
+- [ ] Double ratcheting
+- [ ] Using Asynchronous Ratcheting Trees to improve asymptotic complexity
 
-(some functionality like proper asynchronicity are yet to be implemented)
+
+
+Contributions are Welcome!
