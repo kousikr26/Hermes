@@ -130,6 +130,7 @@ The upper horizontal terminal is the server and others are clients.
 - [x] DHKE, Sender Keys, End to end encryption, HMAC verification
 - [x] Single Ratcheting
 - [x] Asynchronous additions/removals
+- [ ] Add chatroom and login password authentication
 - [ ] Reducing user addition overhead
 - [ ] Message Storing for complete asynchronicity
 - [ ] Delete user option(Keys should be reinitialized)
