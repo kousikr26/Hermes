@@ -8,6 +8,7 @@ This is a group messaging/file transfer application that implements the signal p
 - Uses HMAC to verify ciphertext integrity and prevent ciphertext tampering
 - Group messaging is end to end encrypted with each user using a unique sender key
 - Sender Keys are shared on user addition using an asymmetrically encrypted channel created using a Diffie-Hellman key exchange
+- Use of Sender keys allows message to be encrypted only once on client side and relies on server side fan out for efficient transfer 
 - Key ratcheting is done after each message to ensure backward secrecy of ciphertext
 - Application is asynchronous hence all users do not need to be online for key exchange
 - Uses the socket library on python to connect server and client
