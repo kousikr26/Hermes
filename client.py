@@ -8,6 +8,7 @@ import os
 import time
 import utils
 from Crypto.Cipher import AES
+import tkinter
 authenticated=False
 def send(msg,client,raw=False,enc=False):
     if(not raw):
@@ -45,7 +46,13 @@ def checkCMD(cmd,msg):
 def keyExchange(user,pubKeys):
     user.computeSharedKeys(pubKeys)
     user.encryptSenderKeys()
-
+def display(msg):
+    if MODE=='GUI':
+        msgs=list(msg.split('\n'))
+        for i in msgs:
+            msg_list.insert(tkinter.END, i)
+    elif MODE=='CLI':
+        print(msg)
 def receiveThread():
     global authenticated,user
     while True:            
@@ -81,7 +88,8 @@ def receiveThread():
        
         elif checkCMD("!new user",msg):
             send("!new user",client_socket)
-            print("Adding user, please wait...")
+            
+            display("Adding user, please wait...")
             while(True):
                 try:
                 
@@ -108,7 +116,8 @@ def receiveThread():
                     break
                 
                 except:
-                    print("Waiting for server, please wait...")
+                    display("Waiting for server, please wait...")
+                    
                     time.sleep(0.5)
             
             
@@ -121,11 +130,11 @@ def receiveThread():
             
             with open("./data/"+user.id,'wb+') as userfile:  
                 pickle.dump(user,userfile) 
-            print("Terminating connection")
+            display("Terminating connection")
             client_socket.close()
             os._exit(1) 
         elif checkCMD('!broadcast',msg):
-            print(msg[len("!broadcast"):])
+            display(msg[len("!broadcast"):])
         else:
             
             if(authenticated):
@@ -143,22 +152,22 @@ def receiveThread():
                 try:
                     decipher.verify(tagRec)
                 except ValueError:
-                    print("MAC verification failed. Message may have been tampered with or ratcheting got out of sync")
+                    display("MAC verification failed. Message may have been tampered with or ratcheting got out of sync")
                 if(fromUser!=user.id):
                     
                     
                     
-                    print(fromUser+": "+decMsgRec.decode('utf8'))
+                    display(fromUser+": "+decMsgRec.decode('utf8'))
                     user.decryptedSenderKeys[fromUser]=KDF(user.decryptedSenderKeys[fromUser],RATCHETING_STEPS)       
                     
                 else:
-                    print(fromUser+": "+decMsgRec.decode('utf8'))
+                    display(fromUser+": "+decMsgRec.decode('utf8'))
                     user.senderKey=KDF(user.senderKey,RATCHETING_STEPS)
 
                   
 
             else:
-                print(msg)
+                display(msg)
            
 
             
@@ -178,10 +187,26 @@ def sendThread():
             
                 
             send(msg,client_socket) 
-       
+def sendGUI(event=None):  # event is passed by binders.
+    """Handles sending of messages in GUI mode"""
+    msg = my_msg.get()
+    my_msg.set("")  # Clears input field.
+    
+    if(authenticated and not checkCMD(msg,"!quit")):
+        send(msg,client_socket,enc=True)
+    elif(checkCMD(msg,"!quit")):
+        send(msg,client_socket)    
+        client_socket.close()
+        top.quit()      
+    else:                  
+        send(msg,client_socket)    
+def on_closing(event=None):
+    """This function is to be called when the window is closed."""
+    send("!quit",client_socket)
+    client_socket.close()
 
 
-
+MODE='GUI' #CLI mode or GUI
 HOST = '127.0.0.1'
 PORT = 33001
 if not os.path.exists('data'):
@@ -193,10 +218,39 @@ HEADER_LENGTH=10
 
 USERNAME_LENGTH=50
 RATCHETING_STEPS=5
-client_socket = socket(AF_INET, SOCK_STREAM)
-client_socket.connect(ADDR)
+if (MODE=='GUI'):
 
-receive_thread = Thread(target=receiveThread)
-receive_thread.start()
-swnd_thread = Thread(target=sendThread)
-swnd_thread.start()
+    top = tkinter.Tk()
+    top.title("Hermes")
+    messages_frame = tkinter.Frame(top,borderwidth=5)
+    my_msg = tkinter.StringVar()  # For the messages to be sent.
+    my_msg.set("")
+    scrollbar = tkinter.Scrollbar(messages_frame) 
+    msg_list = tkinter.Listbox(messages_frame, height=50, width=80, yscrollcommand=scrollbar.set)
+    scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+    msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+    msg_list.pack()
+    messages_frame.pack()
+
+    entry_field = tkinter.Entry(top,width='50', textvariable=my_msg)
+    entry_field.bind("<Return>", sendGUI)
+    entry_field.pack()
+    send_button = tkinter.Button(top, text="Send", command=sendGUI)
+    send_button.pack()
+    top.protocol("WM_DELETE_WINDOW", on_closing)
+    client_socket = socket(AF_INET, SOCK_STREAM)
+    client_socket.connect(ADDR)
+    receive_thread = Thread(target=receiveThread)
+    receive_thread.start()
+    tkinter.mainloop()
+   
+elif (MODE=='CLI'):
+
+    client_socket = socket(AF_INET, SOCK_STREAM)
+    client_socket.connect(ADDR)
+
+    receive_thread = Thread(target=receiveThread)
+    receive_thread.start()
+
+    swnd_thread = Thread(target=sendThread)
+    swnd_thread.start()
