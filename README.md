@@ -1,6 +1,9 @@
 # Hermes
 **H**ashed, **E**ncrypted, and **R**atched **MES**saging : An asynchronous end to end encrypted messaging socket application based on the signal protocol 
 
+
+Contributions implementing features given in TODO (End of file) are welcome
+
 ### Overview
 This is a group messaging/file transfer application that implements the signal protocol for secure encrypted communication.
 
