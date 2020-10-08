@@ -15,6 +15,7 @@ This is a group messaging/file transfer application that implements the signal p
 - Key ratcheting is done after each message to ensure backward secrecy of ciphertext
 - Application is asynchronous hence all users do not need to be online for key exchange
 - Uses the socket library on python to connect server and client
+- Available in CLI as well as GUI mode
 
 
 
@@ -109,6 +110,8 @@ swnd_thread.start()
 The server runs each client on a separate thread. This is a bottleneck, and running more than 100 threads on a standard processor is too intensive.
 The key exchange and encryption protocols are implemented in utils.py
 
+The GUI is made with TKinter library on python.
+
 ### Demo
 Run server.py to setup server and client.py from multiple terminals to set up each client
 If needed, the host and port can be changed from both the server and client files.
@@ -122,6 +125,9 @@ For testing `Tmux` is great for managing multiple terminals.
 
 ![Terminal demo](demo.png?raw=true "Demo image")
 
+#### GUI mode(new)
+![GUI demo](gui.png?raw=true "Demo image")
+
 The upper horizontal terminal is the server, and others are clients.
 
 
@@ -134,12 +140,14 @@ The upper horizontal terminal is the server, and others are clients.
 - [x] DHKE, Sender Keys, End to end encryption, HMAC verification
 - [x] Single Ratcheting
 - [x] Asynchronous additions/removals
+- [x] Added basic GUI support
 - [ ] Add file transfer support
 - [ ] Add chatroom and login password authentication
 - [ ] Reducing user addition overhead
 - [ ] Message Storing for complete asynchronicity
 - [ ] Delete user option(Keys should be reinitialized)
 - [ ] Double ratcheting
+- [ ] Improve GUI mode and design(add emoji support etc)
 - [ ] Using Asynchronous Ratcheting Trees to improve asymptotic complexity
 
 
